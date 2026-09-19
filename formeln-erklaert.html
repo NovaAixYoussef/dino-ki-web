@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formeln erklärt – DINO KI</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<style>
+  :root {
+    --blue: #2E6DB4; --blue-mid: #4F8ECD; --blue-light: #96C4EB;
+    --blue-soft: #EAF3FC; --slate: #33475F; --ink: #26262B;
+    --muted: #6B7A90; --orange: #E89E60; --line: #DCE8F4; --bg: #FFFFFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    line-height: 1.65; font-size: 17px;
+  }
+  h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; color: var(--blue); font-weight: 600; }
+  h1 { font-size: clamp(1.9rem, 4.5vw, 3rem); }
+  h2 { font-size: clamp(1.4rem, 2.8vw, 1.9rem); margin-bottom: 0.4em; }
+  h3 { color: var(--slate); margin-top: 1.2em; margin-bottom: 0.35em; }
+  p { margin: 0.6em 0; }
+  a { color: var(--blue-mid); }
+  header.site {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,.94); backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+  }
+  header.site .inner {
+    max-width: 1100px; margin: 0 auto; padding: 10px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .logo { font-family: Georgia, serif; font-size: 1.35rem; font-weight: 700; color: var(--blue); text-decoration: none; letter-spacing: .5px; }
+  nav a {
+    display: inline-block; margin-left: 14px; text-decoration: none; color: var(--slate);
+    font-size: .95rem; padding: 4px 2px; border-bottom: 2px solid transparent;
+  }
+  nav a:hover { color: var(--blue); border-bottom-color: var(--blue-light); }
+  main { max-width: 1100px; margin: 0 auto; padding: 12px 24px 80px; }
+  section { padding: 48px 0 8px; border-top: 1px solid var(--line); margin-top: 8px; }
+  section:first-of-type { border-top: none; }
+  .hero { text-align: center; padding: 34px 0 8px; }
+  .hero .sub { color: var(--muted); font-size: 1.1rem; max-width: 820px; margin: 10px auto 0; }
+  .kicker { text-transform: uppercase; letter-spacing: 3px; font-size: .8rem; color: var(--blue-mid); font-weight: 700; }
+  .grid { display: grid; gap: 16px; margin: 18px 0; }
+  .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .card { background: var(--blue-soft); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .card h3 { margin-top: 0; color: var(--blue); font-size: 1.05rem; }
+  .formula {
+    background: var(--blue-soft); border: 1px solid var(--line);
+    border-left: 4px solid var(--blue-mid); border-radius: 8px;
+    padding: 14px 18px; margin: 14px 0; overflow-x: auto; font-size: 1.2rem;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .95rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--blue); color: #fff; font-weight: 700; }
+  td:first-child { color: var(--slate); font-weight: 600; }
+  .schritt {
+    border: 1px solid var(--line); border-left: 4px solid var(--orange);
+    border-radius: 8px; padding: 12px 16px; margin: 12px 0; background: #fffdfc;
+  }
+  .schritt b { color: var(--blue); }
+  .rechnen { border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; padding: 12px 16px; margin: 12px 0; background: var(--blue-soft); }
+  .rechnen p { margin: .45em 0; }
+  .rechnen code, .schritt code { background: #fff; border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; font-family: Consolas, 'Courier New', monospace; font-size: .92em; color: var(--slate); display: inline-block; margin: 2px 0; }
+  .note { color: var(--muted); font-size: .9rem; }
+  .footnote { color: var(--muted); font-size: .85rem; margin-top: 2.4em; }
+  footer { border-top: 1px solid var(--line); padding: 28px 24px 60px; text-align: center; color: var(--muted); font-size: .9rem; }
+  @media (max-width: 820px) { nav a { margin-left: 8px; font-size: .8rem; } }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <a class="logo" href="index.html">DINO KI</a>
+    <nav>
+      <a href="#grundlage">Grundlage</a>
+      <a href="#f1">Formel 1</a>
+      <a href="#f2">Formel 2</a>
+      <a href="#f3">Formel 3</a>
+      <a href="#f4">Formel 4</a>
+      <a href="#f5">Formel 5</a>
+      <a href="#ueberblick">Überblick</a>
+      <a href="index.html">← Zurück</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="kicker">Formel-Erklärungen · DINO KI</div>
+    <h1>Alle Formeln – verstehen, lesen, rechnen, erklären</h1>
+    <p class="sub">Die fünf Formeln des Projekts mit Zeichenerklärung, Zahlenbeispiel und einer Schritt-für-Schritt-Anleitung, wie du sie <strong>auf Blatt und Papier</strong> nachrechnest.</p>
+  </div>
+
+  <section id="papier">
+    <h2>Wie du auf Papier rechnest – die Grund-Methode</h2>
+    <div class="rechnen">
+      <p><b>1.</b> Schreibe die Formel sauber auf und ersetze jede Variable (Buchstabe) durch ihre Zahl.</p>
+      <p><b>2.</b> Rechne zuerst alle Mal- und Geteilt-Aufgaben (<em>Punkt vor Strich!</em>), dann die Plus- und Minus-Aufgaben von links nach rechts.</p>
+      <p><b>3.</b> Schreibe jeden Zwischenschritt auf – so siehst du, welcher Wert wohin fließt und kannst Fehler finden.</p>
+      <p><b>4.</b> Am Ende kontrollierst du mit dem Taschenrechner.</p>
+      <p class="note">Tipp: Arbeite mit Lineatur (kariert oder liniert), damit die Zahlen exakt untereinander stehen. Schreibe jede Zahl in ihr eigenes „Feld“ – genau wie bei der schriftlichen Addition.</p>
+    </div>
+  </section>
+
+  <section id="grundlage">
+    <h2>Grundlage – Der Eingabe-Vektor x</h2>
+    <div class="formula">$$\mathbf{x} = (x_1,\; x_2,\; x_3,\; x_4,\; x_5,\; x_6)^\top \in \mathbb{R}^6$$</div>
+    <p><b>So liest du sie:</b> „x ist gleich die Transponierte von x-eins bis x-sechs – ein Vektor mit sechs reellen Zahlen im Raum R hoch 6.“</p>
+    <table>
+      <tr><th>Zeichen</th><th>Bedeutung</th></tr>
+      <tr><td>x</td><td>Eingabe-Vektor (alle sechs Sensoren zusammen)</td></tr>
+      <tr><td>x&#8321; … x&#8326;</td><td>Sensorwert 1 bis 6 – normalisiert zwischen 0 und 1</td></tr>
+      <tr><td>⊤ (T)</td><td>Transponieren: aus einer Zeile wird eine Spalte</td></tr>
+      <tr><td>ℝ⁶</td><td>Raum aller Listen mit 6 reellen Zahlen</td></tr>
+    </table>
+    <div class="rechnen">
+      <p><b>Rechenbeispiel aus dem Spiel:</b> $x = (0.29,\; 0.40,\; 0.34,\; 0.00,\; 0.10,\; 0.00)$</p>
+      <p><b>Schritt 1:</b> Zeichne 6 Kästchen nebeneinander auf dein Blatt.</p>
+      <p><b>Schritt 2:</b> Trage in jedes Kästchen einen Sensorwert ein:<br>
+        <code>| 0.29 | 0.40 | 0.34 | 0.00 | 0.10 | 0.00 |</code></p>
+      <p><b>Schritt 3:</b> Lies die Bedeutung ab: Abstand 0.29 · Breite 0.40 · Höhe 0.34 · Dino in der Luft? Nein (0.00) · Tempo 0.10 · Vogel? Nein (0.00).</p>
+    </div>
+  </section>
+
+  <section id="f1">
+    <h2>Formel 1 – Die gewichtete Summe</h2>
+    <div class="formula">$$z_j = \sum_{i=1}^{n} w_{ji}\, x_i + b_j$$</div>
+    <p><b>So liest du sie:</b> „z-j ist gleich die Summe über i von eins bis n: w-ji mal x-i, plus b-j.“ Kurz: Jede Eingabe wird mit ihrem Gewicht multipliziert, alles wird addiert, dann kommt der Bias dazu.</p>
+    <table>
+      <tr><th>Zeichen</th><th>Bedeutung</th></tr>
+      <tr><td>z</td><td>Roh-Wert des Neurons (Ergebnis)</td></tr>
+      <tr><td>w</td><td>Gewicht – Stärke einer Verbindung (lernbar)</td></tr>
+      <tr><td>x</td><td>Eingabe (z. B. ein Sensorwert)</td></tr>
+      <tr><td>b</td><td>Bias – Verschiebung / Grund-Einstellung (lernbar)</td></tr>
+      <tr><td>∑</td><td>Summenzeichen: „addiere alle Terme auf“</td></tr>
+      <tr><td>n</td><td>Anzahl der Eingänge des Neurons</td></tr>
+    </table>
+    <div class="schritt">
+      <p><b>Beispiel:</b> Drei Eingänge: $z = 0.5 \cdot 0.8 + 0.3 \cdot 0.6 + 0.2 \cdot 0.4 + 0.86$</p>
+    </div>
+    <div class="rechnen">
+      <p><b>So rechnest du auf Papier:</b></p>
+      <p><b>Schritt 1 – Mal-Aufgaben zuerst (Punkt vor Strich):</b><br>
+        <code>0.5 × 0.8 = 0.40</code>&nbsp;&nbsp;<code>0.3 × 0.6 = 0.18</code>&nbsp;&nbsp;<code>0.2 × 0.4 = 0.08</code></p>
+      <p><b>Schritt 2 – Produkte untereinander schreiben und addieren:</b><br>
+        <code>0.40 + 0.18 + 0.08 = 0.66</code></p>
+      <p><b>Schritt 3 – Bias addieren:</b><br>
+        <code>z = 0.66 + 0.86 = 1.52</code></p>
+      <p class="note">Merke: Die Gewichte w bestimmen, <em>wie wichtig</em> eine Eingabe ist. Große positive w → Eingabe verstärkt, negative w → Eingabe abgeschwächt.</p>
+    </div>
+  </section><section id="f2">
+    <h2>Formel 2 – Die Aktivierung (tanh)</h2>
+    <div class="formula">$$a_j = f(z_j) \qquad f(z) = \tanh(z) = \frac{e^{z} - e^{-z}}{e^{z} + e^{-z}}$$</div>
+    <p><b>So liest du sie:</b> „a-j ist gleich f von z-j“ und „f von z ist gleich Tangens hyperbolicus von z – der Bruch aus e hoch z minus e hoch minus z, geteilt durch e hoch z plus e hoch minus z.“ Die Funktion tanh presst jede beliebige Zahl in den Bereich von <strong>−1 bis +1</strong>.</p>
+    <table>
+      <tr><th>Zeichen</th><th>Bedeutung</th></tr>
+      <tr><td>a</td><td>Aktivierung – die Ausgabe des Neurons (−1 … +1)</td></tr>
+      <tr><td>f</td><td>Aktivierungsfunktion (hier: tanh)</td></tr>
+      <tr><td>z</td><td>gewichtete Summe aus Formel 1</td></tr>
+      <tr><td>tanh</td><td>Tangens hyperbolicus – eine S-förmige Kurve</td></tr>
+      <tr><td>e</td><td>Eulersche Zahl ≈ 2.71828</td></tr>
+    </table>
+    <div class="schritt">
+      <p><b>Beispiel:</b> $z = 1.52$ aus Formel 1 → berechne $y_1 = \tanh(1.52)$.</p>
+    </div>
+    <div class="rechnen">
+      <p><b>So rechnest du auf Papier (mit Taschenrechner-Taste e^x):</b></p>
+      <p><b>Schritt 1 – e hoch z berechnen:</b><br>
+        <code>e^1.52 ≈ 4.572</code>&nbsp;&nbsp;(Taste: 1.52 → [e^x])</p>
+      <p><b>Schritt 2 – e hoch minus z berechnen:</b><br>
+        <code>e^−1.52 ≈ 0.219</code>&nbsp;&nbsp;(Taste: 1.52 → [+/−] → [e^x])</p>
+      <p><b>Schritt 3 – Zähler und Nenner getrennt ausrechnen:</b><br>
+        <code>Zähler: 4.572 − 0.219 = 4.353</code><br>
+        <code>Nenner: 4.572 + 0.219 = 4.791</code></p>
+      <p><b>Schritt 4 – teilen:</b><br>
+        <code>tanh(1.52) = 4.353 ÷ 4.791 ≈ 0.91</code></p>
+      <p class="note">Ohne Taschenrechner: tanh(0) = 0 (neutral), für große z geht der Wert gegen +1, für stark negative z gegen −1. Aus der S-Kurve kannst du den Wert grob ablesen – exakt rechnet man mit e^x.</p>
+    </div>
+    <div class="grid cols-3">
+      <div class="card"><h3>Sigmoid (Alternative)</h3><p>$$\sigma(z) = \frac{1}{1 + e^{-z}}$$</p><p>Werte zwischen 0 und 1.</p></div>
+      <div class="card"><h3>tanh (unser Netz)</h3><p>$$\tanh(z) = \frac{e^{z} - e^{-z}}{e^{z} + e^{-z}}$$</p><p>Werte zwischen −1 und +1.</p></div>
+      <div class="card"><h3>ReLU (Alternative)</h3><p>$$f(z) = \max(0, z)$$</p><p>0 oder jede positive Zahl.</p></div>
+    </div>
+  </section>
+
+  <section id="f3">
+    <h2>Formel 3 – Ausgabe &amp; Entscheidung</h2>
+    <div class="formula">$$y_1 &gt; 0.5 \Rightarrow \mathrm{SPRUNG}, \qquad y_2 &gt; 0.5 \Rightarrow \mathrm{DUCKEN}$$</div>
+    <p><b>So liest du sie:</b> „Ist y-eins größer als 0.5, dann SPRUNG; ist y-zwei größer als 0.5, dann DUCKEN.“ Das Zeichen ⇒ heißt „daraus folgt“ – die Aktion wird sicher ausgeführt.</p>
+    <table>
+      <tr><th>Zeichen</th><th>Bedeutung</th></tr>
+      <tr><td>y&#8321;</td><td>Ausgabe des SPRUNG-Neurons</td></tr>
+      <tr><td>y&#8322;</td><td>Ausgabe des DUCKEN-Neurons</td></tr>
+      <tr><td>0.5</td><td>Schwellwert – alles darüber zählt als „Aktion“</td></tr>
+      <tr><td>⇒</td><td>logisches Folgezeichen („dann auf jeden Fall“)</td></tr>
+    </table>
+    <div class="schritt">
+      <p><b>Rechenbeispiel:</b> Aus Formel 1 + 2: $z = 1.52 \rightarrow y_1 = \tanh(1.52) \approx 0.91$</p>
+    </div>
+    <div class="rechnen">
+      <p><b>So rechnest du auf Papier:</b></p>
+      <p><b>Schritt 1 – Werte aufschreiben:</b> <code>y₁ = 0.91</code> · <code>y₂ = 0.02</code></p>
+      <p><b>Schritt 2 – mit 0.5 vergleichen (ein „&gt;“ zwischen beide Zahlen schreiben):</b><br>
+        <code>0.91 &gt; 0.5</code> → wahr &nbsp;&nbsp;/&nbsp;&nbsp; <code>0.02 &gt; 0.5</code> → falsch</p>
+      <p><b>Schritt 3 – Entscheidung ablesen:</b> <code>⇒ SPRUNG</code> (kein Ducken)</p>
+      <p class="note">Trick fürs Blatt: Zeichne einen Zahlenstrahl von −1 bis +1 und markiere bei 0.5 den Schwellwert. Trage y ein – liegt der Punkt rechts von 0.5, wird die Aktion ausgeführt.</p>
+    </div>
+  </section><section id="f4">
+    <h2>Formel 4 – Die Fitness-Funktion</h2>
+    <div class="formula">$$F = 0.1 \cdot \mathrm{Frames} \; - \; 0.02 \cdot \mathrm{Ducks} \; - \; 1 \cdot \mathrm{Kollisionen}$$</div>
+    <p><b>So liest du sie:</b> „F ist gleich 0.1 mal die Zahl der Frames, minus 0.02 mal die Zahl der Ducks, minus 1 mal die Zahl der Kollisionen.“ Die Fitness F ist die Note, die die Evolution jedem Netz gibt.</p>
+    <table>
+      <tr><th>Zeichen</th><th>Bedeutung</th></tr>
+      <tr><td>F</td><td>Fitnesswert des Netzwerks – je größer, desto besser</td></tr>
+      <tr><td>Frames</td><td>überlebte Spiel-Schritte (Belohnung)</td></tr>
+      <tr><td>Ducks</td><td>Anzahl Ducken – unnötig ohne Vogel (kleine Strafe)</td></tr>
+      <tr><td>Kollisionen</td><td>Anzahl Aufpralle – sofortiges Ende (große Strafe)</td></tr>
+    </table>
+    <div class="schritt">
+      <p><b>Rechenbeispiel:</b> 800 Frames überlebt, 20 mal geduckt, keine Kollision.</p>
+    </div>
+    <div class="rechnen">
+      <p><b>So rechnest du auf Papier:</b></p>
+      <p><b>Schritt 1 – alle Mal-Aufgaben:</b><br>
+        <code>0.1 × 800 = 80</code>&nbsp;&nbsp;<code>0.02 × 20 = 0.4</code>&nbsp;&nbsp;<code>1 × 0 = 0</code></p>
+      <p><b>Schritt 2 – von links nach rechts subtrahieren:</b><br>
+        <code>F = 80 − 0.4 − 0 = 79.6</code></p>
+      <p class="note">Schreibe die drei Teilwerte untereinander: 80,00 − 0,40 − 0,00 = 79,60. Die Kollision wiegt am schwersten – der Faktor 1 bei einer Kollision kostet nahezu einen ganzen hohen Lauf.</p>
+    </div>
+  </section>
+
+  <section id="f5">
+    <h2>Formel 5 – Die Mutation</h2>
+    <div class="formula">$$w' = w + \varepsilon, \qquad \varepsilon \sim \mathcal{N}(0, \sigma^2)$$</div>
+    <p><b>So liest du sie:</b> „w-Strich ist gleich w plus Epsilon – und Epsilon wird aus einer Normalverteilung mit Mittelwert 0 und Varianz Sigma quadrat gezogen.“ Das neue Gewicht w′ ist also das alte Gewicht plus ein kleiner Zufalls-Wert.</p>
+    <table>
+      <tr><th>Zeichen</th><th>Bedeutung</th></tr>
+      <tr><td>w</td><td>altes Gewicht</td></tr>
+      <tr><td>w′</td><td>neues Gewicht nach der Mutation („w-Strich“)</td></tr>
+      <tr><td>ε (Epsilon)</td><td>kleiner Zufalls-Wert, der addiert wird</td></tr>
+      <tr><td>N</td><td>Normalverteilung (Glockenkurve)</td></tr>
+      <tr><td>σ²</td><td>Varianz der Streuung (hier σ = 0.5 → kleine Schritte)</td></tr>
+    </table>
+    <div class="schritt">
+      <p><b>Rechenbeispiel:</b> Altes Gewicht $w = 0.5$, gezogener Zufallswert $\varepsilon = 0.14$.</p>
+    </div>
+    <div class="rechnen">
+      <p><b>So rechnest du auf Papier:</b></p>
+      <p><b>Schritt 1 – die Werte untereinander schreiben:</b><br>
+        <code>w′ = 0.5 + 0.14</code></p>
+      <p><b>Schritt 2 – addieren (Kommastellen beachten!):</b><br>
+        <code>0.50</code><br><code>+ 0.14</code><br><code>= 0.64</code></p>
+      <p class="note">Hätte der Zufall ε = −0.2 geliefert, ergäbe sich w′ = 0.3. Je kleiner σ, desto ähnlicher bleibt das Kind dem Eltern-Netz.</p>
+    </div>
+  </section>
+
+  <section id="ueberblick">
+    <h2>Überblick – die ganze KI in einer Zeile</h2>
+    <div class="formula">$$z = \sum w_i x_i + b \; \to \; y = \tanh(z) \; \to \; y &gt; 0.5 \Rightarrow \mathrm{Aktion}$$</div>
+    <div class="grid cols-3">
+      <div class="card"><h3>Formeln 1–3: rechnen &amp; entscheiden</h3><p>Gewichtete Summe → tanh → Vergleich mit 0.5. So kommt vom Sensor-Signal die Spiel-Aktion zustande.</p></div>
+      <div class="card"><h3>Formel 4: bewerten</h3><p>Die Fitness F misst, wie lange das Netz überlebt. Sie ist die Note der Evolution.</p></div>
+      <div class="card"><h3>Formel 5: verbessern</h3><p>Die Mutation verändert die Gewichte per Zufall – die besten Netze überleben und mutieren weiter.</p></div>
+    </div>
+    <p class="note">Übung zum Selbstrechnen: Setze eigene Zahlen ein – z. B. Frames = 1200, Ducks = 5, Kollisionen = 1. Ergebnis: F = 0.1·1200 − 0.02·5 − 1·1 = 120 − 0.1 − 1 = 118.9.</p>
+  </section>
+
+  <p class="footnote">DINO KI · Neuroevolution (NEAT) · Python 3.14 · Pygame · Manim – Erklärseite zu <a href="downloads/DINO_KI_Formeln_erklaert.pdf">„Formeln erklärt“ (PDF)</a> und zur <a href="index.html">Hauptseite</a>.</p>
+</main>
+
+<footer>DINO KI · Formeln verstehen, lesen, berechnen, erklären · Design: weiß &amp; blau</footer>
+</body>
+</html>
