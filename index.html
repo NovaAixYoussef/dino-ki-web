@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DINO KI · Neuronales Netzwerk spielt Google Dino</title>
+<meta name="description" content="Wissenschaftliche Projektdokumentation: Ein NEAT-Neuronales-Netzwerk lernt autonom, Google Dino zu spielen. Architektur, Mathematik, Training und Ergebnisse.">
+<script>
+  MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<style>
+  :root {
+    --blue: #2E6DB4;
+    --blue-mid: #4F8ECD;
+    --blue-light: #96C4EB;
+    --blue-soft: #EAF3FC;
+    --slate: #33475F;
+    --ink: #26262B;
+    --muted: #6B7A90;
+    --orange: #E89E60;
+    --line: #DCE8F4;
+    --bg: #FFFFFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    line-height: 1.65;
+    font-size: 17px;
+  }
+  h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; color: var(--blue); font-weight: 600; }
+  h1 { font-size: clamp(2rem, 5vw, 3.4rem); }
+  h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); margin-bottom: 0.4em; }
+  h3 { color: var(--slate); margin-top: 1.2em; margin-bottom: 0.35em; }
+  p { margin: 0.6em 0; }
+  a { color: var(--blue-mid); }
+
+  /* ---------- Kopfzeile ---------- */
+  header.site {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,.94);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+  }
+  header.site .inner {
+    max-width: 1100px; margin: 0 auto; padding: 10px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .logo { font-family: Georgia, serif; font-size: 1.35rem; font-weight: 700; color: var(--blue); text-decoration: none; letter-spacing: .5px; }
+  nav a {
+    display: inline-block; margin-left: 14px; text-decoration: none; color: var(--slate);
+    font-size: .95rem; padding: 4px 2px; border-bottom: 2px solid transparent;
+  }
+  nav a:hover { color: var(--blue); border-bottom-color: var(--blue-light); }
+  @media (max-width: 820px) { nav a { margin-left: 8px; font-size: .8rem; } }
+
+  /* ---------- Layout ---------- */
+  main { max-width: 1100px; margin: 0 auto; padding: 12px 24px 80px; }
+  section { padding: 48px 0 8px; border-top: 1px solid var(--line); margin-top: 8px; }
+  section:first-of-type { border-top: none; }
+
+  .hero { text-align: center; padding: 40px 0 8px; }
+  .hero .sub { color: var(--muted); font-size: 1.15rem; max-width: 760px; margin: 10px auto 0; }
+  .hero img { width: 100%; max-width: 960px; border-radius: 14px; border: 1px solid var(--line); margin-top: 28px; box-shadow: 0 12px 40px rgba(46,109,180,.14); }
+  .kicker { text-transform: uppercase; letter-spacing: 3px; font-size: .8rem; color: var(--blue-mid); font-weight: 700; }
+
+  /* ---------- Karten & Tabellen ---------- */
+  .grid { display: grid; gap: 16px; margin: 18px 0; }
+  .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+
+  .card {
+    background: var(--blue-soft); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .card h3 { margin-top: 0; color: var(--blue); font-size: 1.05rem; }
+  .card .big { font-size: 1.5rem; font-weight: 700; color: var(--blue); font-family: Georgia, serif; }
+
+  table {
+    width: 100%; border-collapse: collapse; margin: 18px 0;
+    font-size: .95rem;
+  }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--blue-soft); color: var(--blue); font-weight: 700; }
+  td:first-child { color: var(--slate); font-weight: 600; white-space: nowrap; }
+
+  /* ---------- Formeln ---------- */
+  .formula {
+    background: var(--blue-soft); border: 1px solid var(--line); border-left: 4px solid var(--blue-mid);
+    border-radius: 8px; padding: 14px 18px; margin: 14px 0; overflow-x: auto;
+  }
+  .formula mjx-container[display="true"] { margin: .2em 0; }
+
+  /* ---------- Bilder ---------- */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 20px 0; }
+  .gallery figure { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .gallery img { width: 100%; display: block; }
+  .gallery figcaption { padding: 8px 12px; font-size: .85rem; color: var(--muted); }
+  .figure { margin: 22px 0; text-align: center; }
+  .figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 12px; }
+  .figure figcaption { color: var(--muted); font-size: .9rem; margin-top: 8px; }
+
+  /* ---------- Liste / Tags ---------- */
+  ul, ol { margin: 0.6em 0 0.6em 1.4em; }
+  li { margin: 0.3em 0; }
+  code {
+    background: var(--blue-soft); border: 1px solid var(--line); border-radius: 5px;
+    padding: 1px 6px; font-family: Consolas, 'Courier New', monospace; font-size: .88em; color: var(--slate);
+  }
+  .flow { font-family: Consolas, monospace; background: var(--blue-soft); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; color: var(--slate); line-height: 1.9; }
+  .footnote { color: var(--muted); font-size: .85rem; margin-top: 2em; }
+  footer { border-top: 1px solid var(--line); padding: 28px 24px 60px; text-align: center; color: var(--muted); font-size: .9rem; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="inner">
+    <a class="logo" href="#top">DINO KI</a>
+    <nav>
+      <a href="#ueberblick">Überblick</a>
+      <a href="#spiel">Das Spiel</a>
+      <a href="#eingaben">Eingaben</a>
+      <a href="#netzwerk">Netzwerk</a>
+      <a href="#mathe">Mathematik</a>
+      <a href="#training">Training</a>
+      <a href="#ergebnisse">Ergebnisse</a>
+      <a href="#code">Code</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="kicker">Experimentelle Studie · Autonome Spielsteuerung</div>
+    <h1>DINO KI</h1>
+    <p class="sub">Wie ein neuronales Netzwerk von Grund auf lernt, das Google-Dino-Spiel selbstständig zu spielen – trainiert mit evolutionärem Algorithmus (NEAT), umgesetzt in Python.</p>
+    <img src="bilder/titelbild.png" alt="Titelbild DINO KI">
+  </div>
+
+  <!-- ============ ÜBERBLICK ============ -->
+  <section id="ueberblick">
+    <h2>1 · Überblick</h2>
+    <p>Ziel des Projekts: Ein künstliches neuronales Netzwerk soll <strong>ohne jede Vorprogrammierung</strong> lernen, den Dino sicher über Kakteen springen und unter Vögeln hindurchducken zu lassen. Das Netz erhält nur minimale Sensordaten und trifft selbstständig Entscheidungen. Gelernt wird nicht durch Backpropagation, sondern durch <strong>evolutionäre Optimierung (NEAT)</strong>: Viele Netzwerke spielen parallel, die besten überleben und mutieren zu einer neuen Generation.</p>
+
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Projekt-Steckbrief</h3>
+        <ul>
+          <li><strong>Name:</strong> DINO KI – Neuronales Netzwerk spielt Google-Dino</li>
+          <li><strong>Prinzip:</strong> Neuroevolution (NEAT-Algorithmus)</li>
+          <li><strong>Sprache:</strong> Python 3.14 (+ C++-Portierung)</li>
+          <li><strong>Laufzeit:</strong> komplett lokal, kein Internet nötig</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Verwendete Bibliotheken</h3>
+        <ul>
+          <li><strong>pygame-ce</strong> 2.5.8 – Spiel, Fenster, Live-Visualisierung</li>
+          <li><strong>neat-python</strong> – neuro-evolutionäre Optimierung</li>
+          <li><strong>pygame-menu</strong> 4.5.2 – Hauptmenü</li>
+          <li><strong>Manim</strong> – statische Netzwerk-Diagramme (PNG)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DAS SPIEL ============ -->
+  <section id="spiel">
+    <h2>2 · Das Spiel</h2>
+    <p>Im klassischen Chrome-Dino-Spiel läuft ein Dino automatisch nach rechts. Der Spieler (hier: das neuronale Netzwerk) muss zwei Dinge können:</p>
+    <div class="grid cols-3">
+      <div class="card"><h3>🦖 Laufen & Springen</h3><p>Kakteen unterschiedlicher Größe erscheinen zufällig – der Dino muss sie rechtzeitig überspringen.</p></div>
+      <div class="card"><h3>🦅 Ducken</h3><p>Vögel fliegen in unterschiedlichen Höhen. Wenn ein Vogel zu tief fliegt, muss der Dino sich ducken statt zu springen.</p></div>
+      <div class="card"><h3>💥 Game Over</h3><p>Eine Kollision beendet den Versuch. Das aktuelle Netz bekommt seine Fitness und die nächste Generation startet.</p></div>
+    </div>
+
+    <div class="gallery">
+      <figure><img src="bilder/dino_start.png" alt="Start"><figcaption>Start – der Dino steht am Anfang</figcaption></figure>
+      <figure><img src="bilder/dino_rennen.png" alt="Rennt"><figcaption>Der Dino läuft automatisch</figcaption></figure>
+      <figure><img src="bilder/dino_springen.png" alt="Springt"><figcaption>Sprung über einen Kaktus</figcaption></figure>
+      <figure><img src="bilder/dino_kaktus.png" alt="Kaktus"><figcaption>Hindernis: Kaktus</figcaption></figure>
+      <figure><img src="bilder/dino_vogel.png" alt="Vogel"><figcaption>Hindernis: fliegender Vogel</figcaption></figure>
+      <figure><img src="bilder/dino_game_over.png" alt="Game Over"><figcaption>Game Over – Wiederversuche bis zum Erfolg</figcaption></figure>
+    </div>
+
+    <h3>Wie das Netzwerk das Spiel steuert</h3>
+    <p>Jeder Dino gehört zu einem eigenen neuronalen Netz. In jedem Frame wird das Netz mit 6 Sensordaten gefüttert und liefert 2 Ausgaben. Die Regeln sind bewusst einfach:</p>
+    <div class="flow">
+      SPRUNG-Ausgabe &gt; 0.50  →  Springen<br>
+      DUCKEN-Ausgabe &gt; 0.50  →  Ducken<br>
+      sonst                     →  Weiterlaufen
+    </div>
+  </section><!-- ============ EINGABEDATEN ============ -->
+  <section id="eingaben">
+    <h2>3 · Eingabedaten des Netzwerks</h2>
+    <p>Das Netzwerk erhält pro Frame <strong>6 normalisierte Sensorwerte</strong>. Normalisierung bedeutet: Alle Werte liegen ungefähr zwischen 0 und 1, damit die Gewichte vergleichbar bleiben.</p>
+
+    <table>
+      <tr><th>#</th><th>Eingabe-Neuron</th><th>Berechnung</th><th>Bedeutung</th></tr>
+      <tr><td>i1</td><td>ABSTAND</td><td>\(\frac{\text{Distanz zum Hindernis}}{\text{Fensterbreite}}\)</td><td>Wie weit ist das nächste Hindernis entfernt?</td></tr>
+      <tr><td>i2</td><td>BREITE</td><td>\(\frac{\text{Breite des Hindernisses}}{100}\)</td><td>Wie breit ist das Hindernis?</td></tr>
+      <tr><td>i3</td><td>HÖHE</td><td>\(\frac{\text{Höhe des Hindernisses}}{100}\)</td><td>Wie hoch ist das Hindernis?</td></tr>
+      <tr><td>i4</td><td>Y-POSITION</td><td>\(\frac{\text{Dino-Position y}}{\text{Fensterhöhe}}\)</td><td>Befindet sich der Dino gerade in der Luft?</td></tr>
+      <tr><td>i5</td><td>TEMPO</td><td>\(\frac{\text{Spielgeschwindigkeit}}{50}\)</td><td>Wie schnell bewegt sich die Welt?</td></tr>
+      <tr><td>i6</td><td>VOGEL</td><td>\(1\) wenn Vogel, sonst \(0\)</td><td>Ist das nächste Hindernis ein fliegender Vogel?</td></tr>
+    </table>
+
+    <p>Zusammengefasst als Eingabe-Vektor \(\mathbf{x}\):</p>
+    <div class="formula">
+      \[
+      \mathbf{x} = \begin{bmatrix} x_1 \\ x_2 \\ x_3 \\ x_4 \\ x_5 \\ x_6 \end{bmatrix}
+      = \begin{bmatrix} \text{ABSTAND} \\ \text{BREITE} \\ \text{HÖHE} \\ \text{Y-POSITION} \\ \text{TEMPO} \\ \text{VOGEL} \end{bmatrix}
+      \in \mathbb{R}^{6}
+      \]
+    </div>
+
+    <p>Die Ausgaben \(\mathbf{y} \in \mathbb{R}^{2}\) steuern den Dino:</p>
+    <div class="formula">
+      \[
+      \mathbf{y} = \begin{bmatrix} y_1 \\ y_2 \end{bmatrix}
+      = \begin{bmatrix} \text{SPRUNG} \\ \text{DUCKEN} \end{bmatrix},
+      \qquad
+      \begin{aligned}
+        y_1 &gt; 0.5 &\Rightarrow& \ \text{Springen} \\
+        y_2 &gt; 0.5 &\Rightarrow& \ \text{Ducken}
+      \end{aligned}
+      \]
+    </div>
+  </section>
+
+  <!-- ============ NETZWERK ============ -->
+  <section id="netzwerk">
+    <h2>4 · Aufbau des neuronalen Netzwerks</h2>
+    <p>Die folgende Grafik zeigt das <strong>echte, aktuell trainierte Netzwerk</strong> (Stand: Start-Topologie). Blaue Kanten = positive Gewichte, orange Kanten = negative Gewichte. Lernende Netzwerke wachsen durch NEAT im Laufe der Generationen.</p>
+
+    <div class="figure">
+      <img src="bilder/netzwerk_weiss_blau.png" alt="NEAT-Netzwerk: 6 Eingaben, 6 Hidden, 2 Ausgaben">
+      <figcaption>Architektur: 6 Eingaben → 6 versteckte Neuronen → 2 Ausgaben (12 × 8 Frame, 16:9)</figcaption>
+    </div>
+
+    <table>
+      <tr><th>Parameter</th><th>Wert</th></tr>
+      <tr><td>Anzahl Eingabe-Neuronen</td><td>6 (ABSTAND, BREITE, HÖHE, Y-POS, TEMPO, VOGEL)</td></tr>
+      <tr><td>Hidden-Layer</td><td>Start: 6 Neuronen (NEAT kann Neuronen hinzufügen)</td></tr>
+      <tr><td>Anzahl Ausgabe-Neuronen</td><td>2 (SPRUNG, DUCKEN)</td></tr>
+      <tr><td>Verbindungen (Start)</td><td>48 (voll verbunden, Eingabe → Hidden)</td></tr>
+      <tr><td>Aktivierungsfunktion</td><td>tanh (Standard; Optionen: tanh, sigmoid, relu)</td></tr>
+      <tr><td>Aggregation</td><td>Summe: \(z = \sum_i w_i x_i + b\)</td></tr>
+      <tr><td>Bias</td><td>Start: Mittelwert 0, Standardabweichung 1; Bereich \(\pm 30\)</td></tr>
+      <tr><td>Gewichte</td><td>Start: Mittelwert 0, Standardabweichung 1; Bereich \(\pm 30\)</td></tr>
+      <tr><td>Feed-Forward</td><td>Ja (keine Rückkopplungen)</td></tr>
+    </table>
+
+    <div class="figure">
+      <img src="bilder/systemuebersicht.png" alt="Systemübersicht Eingabe-Hidden-Ausgabe">
+      <figcaption>Systemübersicht: vom Spielzustand zur Entscheidung</figcaption>
+    </div>
+  </section>
+
+  <!-- ============ MATHEMATIK ============ -->
+  <section id="mathe">
+    <h2>5 · Das mathematische Modell</h2>
+    <p>Jedes Neuron verarbeitet seine Eingaben in zwei Schritten: erst die <strong>gewichtete Summe</strong>, dann die <strong>Aktivierung</strong>.</p>
+
+    <h3>Schritt 1 – Gewichtete Summe</h3>
+    <div class="formula">
+      \[
+      z_j = \sum_{i=1}^{n} w_{ji}\, x_i + b_j
+      \]
+    </div>
+    <p>Dabei ist \(w_{ji}\) das Gewicht der Verbindung von Neuron \(i\) zu Neuron \(j\), \(x_i\) die Eingabe und \(b_j\) der Bias (Schwellwert) des Neurons \(j\).</p>
+    <p>Konkretes Beispiel für ein Neuron mit drei Eingaben:</p>
+    <div class="formula">
+      \[
+      z = w_1 x_1 + w_2 x_2 + w_3 x_3 + b
+      \]
+    </div>
+
+    <h3>Schritt 2 – Aktivierung</h3>
+    <p>Die Aktivierungsfunktion macht die Ausgabe nichtlinear – erst dadurch kann das Netz komplexe Muster lernen. Standard ist der Tangens hyperbolicus:</p>
+    <div class="formula">
+      \[
+      a_j = f(z_j), \qquad
+      f(z) = \tanh(z) = \frac{e^{z} - e^{-z}}{e^{z} + e^{-z}}
+      \]
+    </div>
+    <p>Weitere im Projekt verfügbare Aktivierungen:</p>
+    <div class="grid cols-2">
+      <div class="formula" style="margin:0">
+        \[
+        \text{Sigmoid:}\quad \sigma(z) = \frac{1}{1 + e^{-z}}
+        \]
+      </div>
+      <div class="formula" style="margin:0">
+        \[
+        \text{ReLU:}\quad f(z) = \max(0, z)
+        \]
+      </div>
+    </div>
+
+    <h3>Signalfluss durch das ganze Netz</h3>
+    <div class="flow">
+      \(\mathbf{x}\)  →   \(\mathbf{z}^{(1)} = W^{(1)} \mathbf{x} + \mathbf{b}^{(1)}\)   →   \(\mathbf{a}^{(1)} = \tanh(\mathbf{z}^{(1)})\)  →<br>
+      \(\mathbf{z}^{(2)} = W^{(2)} \mathbf{a}^{(1)} + \mathbf{b}^{(2)}\)  →  \(\mathbf{y} = \tanh(\mathbf{z}^{(2)})\)  →  Entscheidung (SPRUNG / DUCKEN)
+    </div>
+  </section><!-- ============ BEISPIEL-ENTSCHEIDUNG ============ -->
+  <section id="entscheidung">
+    <h2>6 · Wie entsteht eine Entscheidung?</h2>
+    <p>Ein konkretes Beispiel aus dem Spiel. Angenommen, das Netz liefert die folgende Situation:</p>
+    <div class="grid cols-3">
+      <div class="card"><h3>Situation</h3>
+        <ul>
+          <li>Abstand zum Kaktus: <strong>87 px</strong></li>
+          <li>Kaktus-Höhe: <strong>34 px</strong></li>
+          <li>Spieltempo: <strong>5.0</strong></li>
+        </ul>
+      </div>
+      <div class="card"><h3>Netzwerk-Berechnung</h3>
+        <p>\(\mathbf{x} = (0.29,\, 0.40,\, 0.34,\, 0.0,\, 0.10,\, 0.0)\)</p>
+        <p>\(\mathbf{z} = W\mathbf{x} + \mathbf{b}\)</p>
+        <p>\(\mathbf{a} = \tanh(\mathbf{z})\)</p>
+      </div>
+      <div class="card"><h3>Ausgabe & Aktion</h3>
+        <p>\(\text{SPRUNG} = 0.91\)</p>
+        <p>\(\text{DUCKEN} = 0.02\)</p>
+        <p style="font-weight:700;color:var(--blue);margin-top:6px">→ SPRUNG &gt; 0.5 ⇒ Der Dino springt!</p>
+      </div>
+    </div>
+    <div class="figure">
+      <img src="bilder/dino_springen.png" alt="Entscheidung Springen">
+      <figcaption>Ausgabe \(y_1 = 0.91\) → Sprungbefehl → der Dino überwindet den Kaktus</figcaption>
+    </div>
+  </section>
+
+  <!-- ============ TRAINING / NEAT ============ -->
+  <section id="training">
+    <h2>7 · Training – Evolution statt Backpropagation</h2>
+    <p>Das Projekt nutzt <strong>NEAT</strong> (NeuroEvolution of Augmenting Topologies): Netzwerke werden wie Lebewesen behandelt – sie „spielen", bekommen eine Fitness und mutieren. Es gibt kein klassisches „Lernen" mit Loss-Funktion, Optimizer oder Learning Rate.</p>
+
+    <h3>Der Evolutionszyklus</h3>
+    <div class="flow">
+      POPULATION (50 Netze)  →  SPIELEN (alle parallel)  →  FITNESS berechnen  →<br>
+      BESTE AUSWÄHLEN (Elitismus)  →  REKOMBINATION &amp; MUTATION  →  NEUE GENERATION  →  ↺
+    </div>
+
+    <div class="grid cols-4">
+      <div class="card"><div class="big">50</div><p style="margin:0">Individuen pro Population</p></div>
+      <div class="card"><div class="big">50</div><p style="margin:0">Generationen im Training</p></div>
+      <div class="card"><div class="big">2</div><p style="margin:0">Elite-Netze überleben unverändert</p></div>
+      <div class="card"><div class="big">20 %</div><p style="margin:0">Überlebens-Schwelle je Spezies</p></div>
+    </div>
+
+    <h3>NEAT-Besonderheit: die Topologie wächst</h3>
+    <p>NEAT startet mit minimalen Netzen und fügt im Laufe der Evolution <strong>neue Neuronen und Verbindungen</strong> hinzu. Jedes Individuum hat dadurch eine eigene Architektur – die Netzwerk-Grafik im Spiel zeigt live die aktuelle Topologie des besten Individuums.</p>
+
+    <table>
+      <tr><th>Mutations-Parameter</th><th>Wert</th><th>Bedeutung</th></tr>
+      <tr><td>Gewicht-Mutieren</td><td>Rate 0.8 · Stärke 0.5</td><td>Verbindungsgewichte zufällig verändern</td></tr>
+      <tr><td>Bias-Mutieren</td><td>Rate 0.7 · Stärke 0.5</td><td>Schwellwerte der Neuronen verändern</td></tr>
+      <tr><td>Knoten hinzufügen</td><td>0.2</td><td>Neues Neuron in der Topologie</td></tr>
+      <tr><td>Knoten entfernen</td><td>0.2</td><td>Neuron löschen</td></tr>
+      <tr><td>Verbindung hinzufügen</td><td>0.2</td><td>Neue Kante zwischen Neuronen</td></tr>
+      <tr><td>Verbindung entfernen</td><td>0.2</td><td>Kante löschen</td></tr>
+      <tr><td>Aktivierung mutieren</td><td>0.1</td><td>z. B. tanh → sigmoid</td></tr>
+      <tr><td>Gewichts-Grenzen</td><td>\([-30, +30]\)</td><td>Stabilität der Optimierung</td></tr>
+    </table>
+
+    <h3>Mutation mathematisch</h3>
+    <p>Ein Gewicht \(w\) wird zufällig verrauscht – der Zufallsterm ist normalverteilt:</p>
+    <div class="formula">
+      \[
+      w' = w + \varepsilon, \qquad \varepsilon \sim \mathcal{N}(0,\; \sigma^2), \quad \sigma = 0.5
+      \]
+    </div>
+    <p>Dadurch erkundet die Population den Gewichtsraum um die guten Lösungen herum, während der Elitismus die bereits gefundene Leistung stabil hält.</p>
+  </section>
+
+  <!-- ============ FITNESS ============ -->
+  <section id="fitness">
+    <h2>8 · Die Fitness-Funktion</h2>
+    <p>Die Fitness ist das „Lernziel" der Evolution – sie ist das einzige Kriterium, nach dem selektiert wird. Sie belohnt Überleben, bestraft Kollisionen und unnötiges Ducken:</p>
+    <div class="formula">
+      \[
+      F = 0.1 \cdot \text{Frames überlebt} \;-\; 0.02 \cdot \text{unnötige Ducks} \;-\; 1 \cdot \text{Kollisionen}
+      \]
+    </div>
+    <div class="grid cols-3">
+      <div class="card"><h3>+ 0.1 pro Frame</h3><p>Jeder überlebte Frame erhöht die Fitness – je länger der Dino läuft, desto besser das Netz.</p></div>
+      <div class="card"><h3>− 0.02 pro Ducken</h3><p>Ducken ohne Vogel ist Zeitverschwendung – Bestrafung verhindert träges Dauert-Ducken.</p></div>
+      <div class="card"><h3>− 1 pro Kollision</h3><p>Ein Aufprall beendet den Versuch und kostet deutlich Fitness.</p></div>
+    </div>
+    <p>Zusätzlich erhält der <strong>sichtbare Spielpunktestand</strong> \(+0.25\) pro Frame – er steigt parallel zur Fitness und ist die „Zielzahl" des Trainings (Abbruch-Schwelle: 1000 Punkte).</p>
+    <p>Wichtig: Die Fitness misst <strong>eine komplette Lebenszeit</strong> – nicht einfach die Punktzahl. Ein Netz, das 10 Sekunden überlebt, ist besser als eines, das 100 Punkte erreicht und dann stirbt.</p>
+  </section><!-- ============ ERGEBNISSE ============ -->
+  <section id="ergebnisse">
+    <h2>9 · Ergebnisse</h2>
+    <p>Der Trainingsfortschritt wird in der Tabelle dokumentiert – die Werte stammen aus einem aktuellen Trainingslauf und werden bei jedem Lauf aktualisiert (beste Fitness je Generation).</p>
+
+    <table>
+      <tr><th>Generation</th><th>Beste Fitness</th><th>Ø Fitness</th><th>Beste Punkte</th><th>Bemerkung</th></tr>
+      <tr><td>1</td><td>—</td><td>—</td><td>—</td><td>erste zufällige Netze</td></tr>
+      <tr><td>10</td><td>—</td><td>—</td><td>—</td><td>erste Sprünge</td></tr>
+      <tr><td>25</td><td>—</td><td>—</td><td>—</td><td>zuverlässiges Überleben</td></tr>
+      <tr><td>50</td><td>—</td><td>—</td><td>—</td><td>finale Generation</td></tr>
+    </table>
+
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Training im Überblick</h3>
+        <ul>
+          <li><strong>Anzahl Generationen:</strong> 50</li>
+          <li><strong>Population:</strong> 50 Netze pro Generation</li>
+          <li><strong>Netze insgesamt:</strong> bis zu 2 500</li>
+          <li><strong>Fitness-Ziel:</strong> 1000 Punkte</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Fragestellungen</h3>
+        <ul>
+          <li>Was kann das Netz erkennen? → Hindernis-Distanz, -Größe, Vogel</li>
+          <li>Welche Aktionen hat es gelernt? → rechtzeitig springen, ducken</li>
+          <li>Wo liegen seine Fehler? → sehr nahe/kurze Hindernisse, Geschwindigkeitswechsel</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="bilder/netzwerk_weiss_blau.png" alt="Finales Netzwerk">
+      <figcaption>Die Netzwerk-Visualisierung läuft live im Dashboard des Spiels – mit Aktivierungswerten und farbcodierten Gewichten in Echtzeit.</figcaption>
+    </div>
+  </section>
+
+  <!-- ============ CODE ============ -->
+  <section id="code">
+    <h2>10 · Code-Übersicht</h2>
+    <p>Das komplette Projekt liegt lokal als Python-Quellcode vor. Die wichtigsten Dateien:</p>
+
+    <table>
+      <tr><th>Datei</th><th>Aufgabe</th></tr>
+      <tr><td><code>main.py</code></td><td>Startpunkt des Programms</td></tr>
+      <tr><td><code>dino_game.py</code></td><td>Spiel-Engine, Training, Echtzeit-Dashboard (Pygame)</td></tr>
+      <tr><td><code>manim_render.py</code></td><td>Render-Pipeline: NEAT-Genom → Netzwerk-PNG + Live-Werte</td></tr>
+      <tr><td><code>dino_net_scene.py</code></td><td>Manim-Szene für das Netzwerk-Diagramm (weiß/blau)</td></tr>
+      <tr><td><code>neat-config.txt</code></td><td>Alle NEAT-Hyperparameter (Population, Mutationen, Aktivierung …)</td></tr>
+      <tr><td><code>cpp_dino/</code></td><td>C++-Portierung des Spiels</td></tr>
+      <tr><td><code>bilder/</code></td><td>Alle Diagramme und Screenshots dieser Dokumentation</td></tr>
+    </table>
+
+    <h3>Wichtige NEAT-Konfiguration (Kernwerte)</h3>
+    <div class="flow">
+      pop_size             = 50<br>
+      fitness_threshold    = 1000<br>
+      activation_default   = tanh<br>
+      num_inputs           = 6<br>
+      num_hidden           = 6<br>
+      num_outputs          = 2<br>
+      weight_mutate_rate   = 0.8<br>
+      weight_mutate_power  = 0.5<br>
+      conn_add_prob        = 0.2<br>
+      node_add_prob        = 0.2<br>
+      population.run(eval_genomes, 50)
+    </div>
+
+    <p class="footnote">Erstellt als wissenschaftliche Projektdokumentation · Design: modern, minimal, Weiß &amp; Blau · Alle Bilder wurden mit den echten Spieldaten und Assets des Projekts erzeugt.</p>
+  </section>
+
+</main>
+
+<footer>
+  <strong>DINO KI</strong> · Neuronales Netzwerk spielt Google Dino · Python + Pygame + NEAT + Manim · Lokal trainiert, evolutionär optimiert.
+</footer>
+
+</body>
+</html>
