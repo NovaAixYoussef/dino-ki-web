@@ -1,0 +1,24 @@
+1
+00:00:00,000 --> 00:00:03,000
+DINO KI – So rechnet das neuronale Netzwerk.
+
+2
+00:00:03,000 --> 00:00:09,000
+Schritt 1: Das Netz bekommt sechs Sensoren-Werte zwischen 0 und 1 – kein Bild, nur Zahlen.
+
+3
+00:00:09,000 --> 00:00:18,000
+Schritt 2 (Formel 1): Eingabe mal Gewicht, alles summieren, plus Bias. Hier: z = 1.52.
+
+4
+00:00:18,000 --> 00:00:27,000
+Schritt 3 (Formel 2): tanh presst z in den Bereich von −1 bis +1. Aus 1.52 wird 0.91.
+
+5
+00:00:27,000 --> 00:00:35,000
+Schritt 4 (Formel 3): 0.91 ist größer als 0.5 – also: SPRUNG!
+
+6
+00:00:35,000 --> 00:00:42,000
+Schritt 5: Fitness bewertet jedes Netz, Mutation verändert die Gewichte leicht.
+
